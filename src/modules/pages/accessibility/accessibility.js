@@ -7,6 +7,8 @@ import { HeaderElements } from "../../header/HeaderElements";
 import { Footer } from "../../footer/footer";
 import documentationLookup from '../home/documentationLookup.js'
 
+const API_BASE = process.env.API_BASE;
+
 const docPDF = documentationLookup['Wheelchair Accessibility']
 
 /*
@@ -35,7 +37,7 @@ const LoadStations = map =>{
   .then(agoStations=>{
     
     // hit RTPS API to load stations table from DB
-    fetch('https://alpha.dvrpc.org/api/rtps/access?stations')
+    fetch(`${API_BASE}/access/stations`)
     
     // parse json if fetch is successful
     .then(dbReturn=>{ if (dbReturn.status == 200) { return dbReturn.json() } })
@@ -121,7 +123,7 @@ const LoadTAZ = map =>{
   .then(agoZones=>{
     
     // hit RTPS API endpoint for TAZ data
-    fetch('https://alpha.dvrpc.org/api/rtps/access?zones')
+    fetch(`${API_BASE}/access/zones`)
    
     // parse DB return if successful
     .then(dbReturn=>{if (dbReturn.status == 200) { return dbReturn.json() } })

@@ -2,6 +2,8 @@ const path = require('path'),
     HtmlWebpackPlugin = require('html-webpack-plugin'),
     ExtractTextPlugin = require('extract-text-webpack-plugin')
 
+const Dotenv = require('dotenv-webpack');
+
 let extractPlugin = new ExtractTextPlugin({
     filename: './bundle.styles.css'
 })
@@ -61,5 +63,6 @@ module.exports = {
             hash: true
         }),
         extractPlugin,
+        new Dotenv(),
     ]
 };

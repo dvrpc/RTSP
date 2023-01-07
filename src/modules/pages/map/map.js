@@ -6,6 +6,8 @@ import { ResultsSummary } from './sidebar/resultsSummary';
 import { LoadLayers, addRailLayers } from '../../../utils/loadMapLayers.js'
 import { CreateDvrpcNavControl } from '../../../utils/defaultExtentControl';
 
+const API_BASE = process.env.API_BASE;
+
 // adjust zoom level on mobile
 let mobileZoom;
 const windowWidth = window.innerWidth
@@ -106,8 +108,8 @@ const LoadRegionalSummary = map =>{
         check: {},
         layer: {}
     }
-    fetch('https://alpha.dvrpc.org/api/rtps/gap?summary')
-    .then(cargo=> { if (cargo.ok) return cargo.json()})
+    fetch(`${API_BASE}/gap/summary`)
+    .then(response=> { if (response.ok) return response.json()})
     .then(data=>{
         let layerDef = {
             id: 'zones-summary',
@@ -121,10 +123,10 @@ const LoadRegionalSummary = map =>{
                 visibility: 'visible'
             }
         }
-        for (let zone in data.cargo){
+        for (let zone in data){
             if (!helper.check[zone]){
                 // create fill expression item for zones that don't already have one
-                helper.fillExpression.push(parseInt(zone), helper.colorScheme[data.cargo[zone]])
+                helper.fillExpression.push(parseInt(zone), helper.colorScheme[data[zone]])
                 helper.check[zone] = zone
             }
         }
@@ -203,25 +205,29 @@ const PerformQuery = async input => {
         check: {},
         analysisLayers: {}
     }
-    input.direction == 'To' ? input.direction = 'To Zone' : input.direction = 'From Zone'
-    let fetchData = input.type === 'zone' ?
-        await fetch(`https://alpha.dvrpc.org/api/rtps/gap?zones=[${input.selection}]&direction=${input.direction}`) :
-        await fetch(`https://alpha.dvrpc.org/api/rtps/gap?muni=${input.selection}&direction=${input.direction}`)
 
-    if (fetchData.ok) {
-        let rawData = await fetchData.json()    
-        const cargo = rawData.cargo
-        const demandScore = rawData.demandScore ? rawData.demandScore[0].toLocaleString() : null
+    input.direction == 'To' ? input.direction = 'ToZone' : input.direction = 'FromZone';
 
-        if (rawData.status == 'success'){
-            helpers.analysisLayers= ProcessData(cargo, helpers) // process data
+    let gaps;
+    let demandScore = null;
 
-            new ResultsSummary(input, rawData.cargo, demandScore)
+    if (input.type == 'zone') {
+        let fetchData = await fetch(`${API_BASE}/gap/zones/${input.selection}/${input.direction}`);
+        if (fetchData.ok) {
+            gaps = await fetchData.json();
         }
-        else{
-            alert(`Error! ${rawData.message}`)
+    } else {
+        let fetchData = await fetch(`${API_BASE}/gap/muni/${input.selection}/${input.direction}`);
+        if (fetchData.ok) {
+            let data = await fetchData.json();
+            demandScore = data.demand_score;
+            gaps = data.gaps;
         }
     }
+    helpers.analysisLayers = ProcessData(gaps, helpers)
+
+    new ResultsSummary(input, gaps, demandScore)
+
     return helpers.analysisLayers
 }
 
@@ -441,14 +447,14 @@ const LoadBusLayer = map =>{
       url: "https://tiles.dvrpc.org/data/dvrpc-tim-transit.json"
     });
     
-    fetch("https://alpha.dvrpc.org/api/rtps/frequency?bus")
+    fetch(`${API_BASE}/frequency/bus`)
     .then(
         response =>
         response.ok ? response.json() : console.error("error, will robinson")
     )
     .then(bus => {
         let filterExp = ['any']
-        bus.cargo.map(line=>{
+        bus.map(line=>{
             let exp = ['match', ['get', 'linename'], line.linename, true, false]
             filterExp.push(exp)
         })
