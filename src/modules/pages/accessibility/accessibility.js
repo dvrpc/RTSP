@@ -19,6 +19,19 @@ const docPDF = documentationLookup['Wheelchair Accessibility']
     - map: Mapbox GL element to add layer to
 */
 const LoadStations = map =>{
+
+  // get station information from API
+  let dbStations;
+  fetch(`${API_BASE}/access/stations`)
+    .then(response => {
+      if (response.status == 200) {
+        return response.json()
+      }
+    })
+    .then(data => {
+      dbStations = data;
+    });
+
   // shell of the geoJSON we will build on the fly
   let mapStations = {
     crs: {
@@ -35,75 +48,65 @@ const LoadStations = map =>{
   // parse json return if fetch is successful
   .then(ago=>{ if (ago.status == 200){ return ago.json() } })
   .then(agoStations=>{
-    
-    // hit RTPS API to load stations table from DB
-    fetch(`${API_BASE}/access/stations`)
-    
-    // parse json if fetch is successful
-    .then(dbReturn=>{ if (dbReturn.status == 200) { return dbReturn.json() } })
-    .then(dbStations=>{
-      
-      // append DB data to geometry
-      agoStations.features.forEach(feature=>{
-        const props = feature.attributes
-        const dvrpc_id = props.dvrpc_id
-        const station = props.station
-        const geom = [feature.geometry.x, feature.geometry.y]
+    // append DB data to geometry
+    agoStations.features.forEach(feature=>{
+      const props = feature.attributes
+      const dvrpc_id = props.dvrpc_id
+      const station = props.station
+      const geom = [feature.geometry.x, feature.geometry.y]
 
-        // @NOTE: creating a geoJSON on the fly here b/c of the aforementioned behavior when parsing a geoJSON return.
-        // ideally we figure out why that's dropping proprties and can go back to just adding fields to the existing response and using it.
-        if(dbStations[dvrpc_id]) {
-          const score = dbStations[dvrpc_id].accessible
+      // @NOTE: creating a geoJSON on the fly here b/c of the aforementioned behavior when parsing a geoJSON return.
+      // ideally we figure out why that's dropping proprties and can go back to just adding fields to the existing response and using it.
+      const score = dbStations[dvrpc_id];
 
-          mapStations.features.push({
-            "geometry": {
-              "type": 'Point',
-              "coordinates": geom
-            },
-            "properties": {
-              "dvrpc_id": dvrpc_id,
-              "STATION": station,
-              "accessibility": score
-            },
-            "type": "Feature"
-          })
-        }
+      mapStations.features.push({
+        "geometry": {
+          "type": 'Point',
+          "coordinates": geom
+        },
+        "properties": {
+          "dvrpc_id": dvrpc_id,
+          "STATION": station,
+          "accessibility": score
+        },
+        "type": "Feature"
       })
-      
-      // add source to map
-      map.addSource('stations', { type: 'geojson', data: mapStations })
-
-      // base definition for station layer
-      let layerDef = {
-        "id": 'station-access',
-        "type": 'circle',
-        'source': 'stations',
-        'paint': {
-            'circle-radius': [
-              'interpolate', ['linear'], ['zoom'],
-              7, 1,
-              12, 6
-            ],
-          'circle-color':[
-            'interpolate', ['linear'], ['get', 'accessibility'],
-            0, '#e89234',
-            1, '#8bb23f',
-            2, '#08506d'
-          ],
-          'circle-stroke-color': '#fff',
-          'circle-stroke-width': [
-            'interpolate', ['linear'], ['zoom'],
-            7, .1,
-            12, 1.5
-          ]
-        }
-      }
-      
-      // add layer
-      map.addLayer(layerDef, 'transit-railLabels')
     })
+    
+    // add source to map
+    map.addSource('stations', { type: 'geojson', data: mapStations })
+
+    // base definition for station layer
+    let layerDef = {
+      "id": 'station-access',
+      "type": 'circle',
+      'source': 'stations',
+      'paint': {
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            7, 1,
+            12, 6
+          ],
+        'circle-color':[
+          'interpolate', ['linear'], ['get', 'accessibility'],
+          0, '#e89234',
+          1, '#8bb23f',
+          2, '#08506d'
+        ],
+        'circle-stroke-color': '#fff',
+        'circle-stroke-width': [
+          'interpolate', ['linear'], ['zoom'],
+          7, .1,
+          12, 1.5
+        ]
+      }
+    }
+    
+    // add layer
+    map.addLayer(layerDef, 'transit-railLabels')
   })
 }
+
 
 /*
   LoadTAZ(map)
