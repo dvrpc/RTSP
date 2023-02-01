@@ -51,7 +51,6 @@ module.exports = {
             }
         ]
     },
-    watch: true,
     devServer: {
         contentBase: path.resolve(__dirname, 'src'),
         port: 9000
