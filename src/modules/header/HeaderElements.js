@@ -4,12 +4,13 @@
         still contains them.
 */
 
+const API_BASE = process.env.API_BASE;
 
 // municipality look up for gap page
 const GetGeomNames= x =>{
     let mcds = []
     // hit muni api
-    fetch('https://alpha.dvrpc.org/api/rtps/gap?list')
+    fetch(`${API_BASE}/municipalities`)
     .then(response=>{
         if (response.status ==200) return response.json()
     })

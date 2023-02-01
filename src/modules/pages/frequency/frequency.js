@@ -6,6 +6,8 @@ import { CreateDvrpcNavControl } from "../../../utils/defaultExtentControl";
 import { Footer } from '../../footer/footer.js';
 import documentationLookup from '../home/documentationLookup.js'
 
+const API_BASE = process.env.API_BASE;
+
 const docPDF = documentationLookup['Higher Frequency Scenario']
 
 const contentRef = {
@@ -937,13 +939,13 @@ const LoadExisting = map => {
     }
     return popupContainer.outerHTML;
   };
-  fetch("https://alpha.dvrpc.org/api/rtps/frequency?transit")
+  fetch(`${API_BASE}/frequency/transit`)
     .then(
       response =>
-        response.ok ? response.json() : console.error("error will robinson")
+        response.ok ? response.json() : console.error("error")
     )
     .then(existing => {
-      contentRef.mapData.existing = existing.cargo;
+      contentRef.mapData.existing = existing;
       let layerDef = [
         {
           id: "transit-overview",
@@ -957,9 +959,9 @@ const LoadExisting = map => {
           layout: { visibility: "none" }
         }
       ];
-      for (let line in existing.cargo) {
+      for (let line in existing) {
         OverviewColor(
-          existing.cargo[line].avg_freq,
+          existing[line].avg_freq,
           layerDef[0].paint["line-color"],
           line
         );
@@ -971,7 +973,7 @@ const LoadExisting = map => {
       layerDef.map(layer => {
         map.addLayer(layer, "base-muniOutline");
         map.on("click", layer.id, e => {
-          if (existing.cargo[e.features[0].properties.linename]){
+          if (existing[e.features[0].properties.linename]){
             map.setFilter('transitRef-all', ['==', 'linename', e.features[0].properties.linename])
             let offsets = {
               top: [0, 0],
@@ -1085,21 +1087,21 @@ const LoadTaz = map => {
   )
     .then(
       response =>
-        response.ok ? response.json() : console.error("error will robinson")
+        response.ok ? response.json() : console.error("error")
     )
     .then(taz => {
-      fetch("https://alpha.dvrpc.org/api/rtps/frequency?zone")
+      fetch(`${API_BASE}/frequency/zone`)
         .then(
           response =>
-            response.ok ? response.json() : console.error("error will robinson")
+            response.ok ? response.json() : console.error("error")
         )
         .then(apiJson => {
           taz.features.map(zone => {
-            if (apiJson.cargo[zone.properties.TAZN.toString()]) {
+            if (apiJson[zone.properties.TAZN.toString()]) {
               zone.properties["tActual"] =
-                apiJson.cargo[zone.properties.TAZN.toString()].tActual;
+                apiJson[zone.properties.TAZN.toString()].tActual;
               zone.properties["vActual"] =
-                apiJson.cargo[zone.properties.TAZN.toString()].vActual;
+                apiJson[zone.properties.TAZN.toString()].vActual;
             } else {
               zone.properties["tActual"] = 0;
               zone.properties["vActual"] = 0;
@@ -1186,7 +1188,7 @@ const LoadTaz = map => {
                 left: [0, 0],
                 right: [0, 0]
               };
-              let content = PopUps(layer.id.split("-")[1], e, apiJson.cargo);
+              let content = PopUps(layer.id.split("-")[1], e, apiJson);
               let popup = new mapboxgl.Popup({
                 offset: offsets,
                 className: "frequency__popup"
@@ -1290,13 +1292,13 @@ const LoadBus = map => {
         }
     });
   };
-  fetch("https://alpha.dvrpc.org/api/rtps/frequency?bus")
+  fetch(`${API_BASE}/frequency/bus`)
     .then(
       response =>
-        response.ok ? response.json() : console.error("error, will robinson")
+        response.ok ? response.json() : console.error("error")
     )
     .then(bus => {
-      contentRef.mapData.bus = bus.cargo;
+      contentRef.mapData.bus = bus;
       let busLayers = [
         {
           id: "transit-busAbsChange",
@@ -1352,7 +1354,7 @@ const LoadBus = map => {
         layer.paint["line-color"].push("rgba(255,255,255,0)");
         map.addLayer(layer, "base-muniOutline");
         map.on("click", layer.id, e => {
-          bus.cargo.map(route=>{
+          bus.map(route=>{
             if (route.linename == e.features[0].properties.linename){
               map.setFilter("transitRef-all", [
                 "==",
@@ -1472,13 +1474,13 @@ const LoadRail = map => {
     }
     return popupContainer.outerHTML;
   };
-  fetch("https://alpha.dvrpc.org/api/rtps/frequency?rail")
+  fetch(`${API_BASE}/frequency/rail`)
     .then(
       response =>
-        response.ok ? response.json() : console.error("error will robinson")
+        response.ok ? response.json() : console.error("error")
     )
     .then(rail => {
-      contentRef.mapData.rail.api = rail.cargo;
+      contentRef.mapData.rail.api = rail;
       let layerDef = {
         id: "transit-railLineChange",
         source: "transit",
@@ -1491,8 +1493,8 @@ const LoadRail = map => {
           "line-opacity": 0.75
         }
       };
-      for (let line in rail.cargo) {
-        let data = rail.cargo[line];
+      for (let line in rail) {
+        let data = rail[line];
         LineWidth(data.percent, layerDef.paint["line-width"], line);
         LineColor(data.absolute, layerDef.paint["line-color"], line);
       }
@@ -1500,7 +1502,7 @@ const LoadRail = map => {
       layerDef.paint["line-color"].push("rgba(255,255,255,0)");
       map.addLayer(layerDef, "base-muniOutline");
       map.on("click", layerDef.id, e => {
-        if (rail.cargo[e.features[0].properties.linename]){
+        if (rail[e.features[0].properties.linename]){
           map.setFilter("transitRef-all", [
           "==",
           "linename",
