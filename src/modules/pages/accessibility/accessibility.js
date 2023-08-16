@@ -119,7 +119,7 @@ const LoadStations = map =>{
 const LoadTAZ = map =>{
 
   // hit AGO endpoint for TAZ geometries
-  fetch('https://arcgis.dvrpc.org/portal/rest/services/Demographics/TAZ_2010/FeatureServer/0/query?where=1%3D1&outFields=TAZN&geometryPrecision=4&outSR=4326&returnExceededLimitFeatures=true&f=geojson')
+  fetch('https://arcgis.dvrpc.org/portal/rest/services/Demographics/taz/FeatureServer/0/query?where=1%3D1&outFields=tazt&geometryPrecision=4&outSR=4326&returnExceededLimitFeatures=true&f=geojson')
   
   // parse AGO return if successful
   .then(ago=>{ if (ago.status ==200){return ago.json() } })
@@ -133,12 +133,12 @@ const LoadTAZ = map =>{
     .then(dbZones=>{
       // join DB data to geometries
       agoZones.features.map(feature=>{
-        if (dbZones[feature.properties.tazn]){
-          feature.properties.AccAll = dbZones[feature.properties.tazn].all_rail
-          feature.properties.AccCur = dbZones[feature.properties.tazn].current
-          feature.properties.AccFut = dbZones[feature.properties.tazn].future
-          feature.properties.DisCur = dbZones[feature.properties.tazn].discur
-          feature.properties.DisFut = dbZones[feature.properties.tazn].disfut
+        if (dbZones[feature.properties.tazt]){
+          feature.properties.AccAll = dbZones[feature.properties.tazt].all_rail
+          feature.properties.AccCur = dbZones[feature.properties.tazt].current
+          feature.properties.AccFut = dbZones[feature.properties.tazt].future
+          feature.properties.DisCur = dbZones[feature.properties.tazt].discur
+          feature.properties.DisFut = dbZones[feature.properties.tazt].disfut
         }
         else{
           feature.properties.AccAll = 0
