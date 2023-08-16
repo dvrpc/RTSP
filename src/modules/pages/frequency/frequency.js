@@ -1029,7 +1029,7 @@ const LoadTaz = map => {
         - data => reference object to pull popup content from
   */
   const PopUps = (layer, event, data) => {
-    let target = event.features[0].properties.TAZN;
+    let target = event.features[0].properties.tazt;
     if (data[target]) {
       let feat = data[target];
       let popup;
@@ -1083,7 +1083,7 @@ const LoadTaz = map => {
     }
   };
   fetch(
-    "https://arcgis.dvrpc.org/portal/rest/services/Demographics/TAZ_2010/FeatureServer/0/query?where=1%3D1&outFields=TAZN&geometryPrecision=4&outSR=4326&returnExceededLimitFeatures=true&f=geojson"
+    "https://arcgis.dvrpc.org/portal/rest/services/Demographics/taz/FeatureServer/0/query?where=1%3D1&outFields=tazt&geometryPrecision=4&outSR=4326&returnExceededLimitFeatures=true&f=geojson"
   )
     .then(
       response =>
@@ -1097,11 +1097,12 @@ const LoadTaz = map => {
         )
         .then(apiJson => {
           taz.features.map(zone => {
-            if (apiJson[zone.properties.TAZN.toString()]) {
+            console.log(zone.properties.tazt.toString())
+            if (apiJson[zone.properties.tazt.toString()]) {
               zone.properties["tActual"] =
-                apiJson[zone.properties.TAZN.toString()].tActual;
+                apiJson[zone.properties.tazt.toString()].tActual;
               zone.properties["vActual"] =
-                apiJson[zone.properties.TAZN.toString()].vActual;
+                apiJson[zone.properties.tazt.toString()].vActual;
             } else {
               zone.properties["tActual"] = 0;
               zone.properties["vActual"] = 0;
@@ -1176,7 +1177,7 @@ const LoadTaz = map => {
               map.setFilter("zone-reference", [
                 "==",
                 "no",
-                e.features[0].properties.TAZN
+                e.features[0].properties.tazt
               ]);
               let offsets = {
                 top: [0, 0],
