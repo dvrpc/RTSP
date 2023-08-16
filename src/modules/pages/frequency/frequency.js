@@ -1097,7 +1097,6 @@ const LoadTaz = map => {
         )
         .then(apiJson => {
           taz.features.map(zone => {
-            console.log(zone.properties.tazt.toString())
             if (apiJson[zone.properties.tazt.toString()]) {
               zone.properties["tActual"] =
                 apiJson[zone.properties.tazt.toString()].tActual;
